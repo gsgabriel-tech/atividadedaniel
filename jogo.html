@@ -83,6 +83,39 @@
             }
         }
 
+        function drawBola(mySvg){
+            //A largura da raquete é 15%
+            //A altura da raquete é 3%
+            //A posicao inicial da raquete é no meio da GameBoard em baixo
+            
+            let myGameBoard = document.getElementById('myGameBoard');
+            let yGB = Number(myGameBoard.getAttribute('y'));
+            let xGB = Number(myGameBoard.getAttribute('x'));
+            let hGB = Number(myGameBoard.getAttribute('height'));
+            let wGB = Number(myGameBoard.getAttribute('width'));
+            let rxBola = Math.round(((wGB/100)*cenaGame.bola.raio));
+            let ryBola = Math.round(((hGB/100)*cenaGame.bola.raio));
+            let xBola = Math.round(xGB + ((wGB/100)*cenaGame.bola.x) );            
+            let yBola = yGB + hGB - Math.round((hGB/100)*cenaGame.bola.y); 
+                       
+            let myBola = document.getElementById('myBola'); 
+            if(myBola == null){
+                myBola = document.createElementNS("http://www.w3.org/2000/svg", 'circle');
+                myBola.setAttribute('id','myBola');
+                mySvg.appendChild(myBola);
+            }
+            let fill = cenaGame.bola.cor;
+            let stroke = 'white';
+            let sw = 1;
+            let theStyle = style="fill:"+fill+";stroke:"+stroke+";stroke-width:"+sw+";padding:0";
+            myBola.setAttribute('cx',xBola);
+            myBola.setAttribute('cy',yBola);
+            //myBola.setAttribute('rx',rxBola);            
+            myBola.setAttribute('r',ryBola);
+            myBola.setAttribute('style',theStyle);
+
+        }
+       
         function drawRaquete(mySvg){
 
             //A largura da raquete é 15%
@@ -95,7 +128,7 @@
             let hGB = Number(myGameBoard.getAttribute('height'));
             let wGB = Number(myGameBoard.getAttribute('width'));
             let tRaquete = Math.round((wGB/100)*(cenaGame.raquete.tamanho));
-            let hRaquete = Math.round((wGB/100)*(cenaGame.raquete.altura));
+            let hRaquete = Math.round((hGB/100)*(cenaGame.raquete.altura));
             let xRaqueteMeio = Math.round(xGB + ((wGB/100)*cenaGame.raquete.x) );
             let xRaquete = Math.round(xRaqueteMeio - (tRaquete/2));
             let yRaquete = yGB + hGB - hRaquete;
@@ -106,7 +139,7 @@
                 myRaquete.setAttribute('id','myRaquete');
                 mySvg.appendChild(myRaquete);
             }
-            let fill = 'blue';
+            let fill = cenaGame.raquete.cor;
             let stroke = 'white';
             let sw = 1;
             let theStyle = style="fill:"+fill+";stroke:"+stroke+";stroke-width:"+sw+";padding:0";
@@ -158,6 +191,62 @@
 
         }
 
+        function movimentaBola(){
+            processaColisaoParedes();
+            processaColisaoRaquete();
+            let x = cenaGame.bola.x + cenaGame.bola.dx;
+            let y = cenaGame.bola.y + cenaGame.bola.dy;
+
+            cenaGame.bola.x = x;
+            cenaGame.bola.y = y;
+
+        }
+
+        function processaColisaoParedes(){
+            let myGameBoard = document.getElementById('myGameBoard');
+            let yGB = Number(myGameBoard.getAttribute('y'));
+            let xGB = Number(myGameBoard.getAttribute('x'));
+            let hGB = Number(myGameBoard.getAttribute('height'));
+            let wGB = Number(myGameBoard.getAttribute('width'));
+            let xBola = Math.round(xGB + ((wGB/100)*cenaGame.bola.x) );            
+            let yBola = yGB + hGB - Math.round((hGB/100)*cenaGame.bola.y);
+            
+            if( (xBola > (xGB+wGB)) && (yBola > yGB) ){
+                cenaGame.bola.dx = -cenaGame.bola.dx;
+            }
+            else if( (yBola < yGB) && ( xBola < (xGB+wGB))){
+                cenaGame.bola.dy = -cenaGame.bola.dy;
+            } 
+            else if( (xBola < xGB) && (yBola > yGB)){
+                cenaGame.bola.dx = -cenaGame.bola.dx;
+            }
+            else if( (yBola > (yGB+hGB)) ){
+                cenaGame.bola.dx = 0
+                cenaGame.bola.dy =0
+            }            
+        }
+
+        function processaColisaoRaquete(){
+            let myGameBoard = document.getElementById('myGameBoard');
+            let yGB = Number(myGameBoard.getAttribute('y'));
+            let xGB = Number(myGameBoard.getAttribute('x'));
+            let hGB = Number(myGameBoard.getAttribute('height'));
+            let wGB = Number(myGameBoard.getAttribute('width'));
+            let xBola = Math.round(xGB + ((wGB/100)*cenaGame.bola.x) );            
+            let yBola = yGB + hGB - Math.round((hGB/100)*cenaGame.bola.y);
+            let myRaquete = document.getElementById('myRaquete');
+            let yRaq = Number(myRaquete.getAttribute('y'));
+            let xRaq = Number(myRaquete.getAttribute('x'));
+            let hRaq = Number(myRaquete.getAttribute('height'));
+            let wRaq = Number(myRaquete.getAttribute('width'));
+
+            if( (yBola >= yRaq)& (xBola >= xRaq) & (xBola <= (xRaq+hRaq)))
+            {
+                cenaGame.bola.dy = Math.abs(cenaGame.bola.dy);
+            }
+
+        }
+
         function drawScreen(){
             //Pegar o tamanho da tela
             let h = window.innerHeight;
@@ -176,6 +265,7 @@
             drawPlacar(mySvg);
             drawTijolos(mySvg);
             drawRaquete(mySvg);
+            drawBola(mySvg);
         }
 
         let strokeMainSquare = 10;
@@ -185,13 +275,19 @@
             "tijolos":[
                 {"linha":1, "coluna":1},{"linha":1, "coluna":2},{"linha":1, "coluna":3},{"linha":1, "coluna":4},{"linha":1, "coluna":5},
                 {"linha":2, "coluna":1},{"linha":2, "coluna":2},{"linha":2, "coluna":3},{"linha":2, "coluna":4},{"linha":2, "coluna":5},                
-                {"linha":3, "coluna":1},{"linha":3, "coluna":2},{"linha":3, "coluna":3},{"linha":3, "coluna":4},{"linha":3, "coluna":5},
+                {"linha":3, "coluna":1},{"linha":3, "coluna":2},{"linha":3, "coluna":3},{"linha":3, "coluna":4},{"linha":3, "coluna":5}
             ],
-            "bola":{"x":0,"y":0,"cor":"blue","dx":0,"dy":1},
-            "raquete":{"x":50,"tamanho":15,"altura":2}
+            "bola":{"x":50,"y":6,"raio":2,"cor":"red","dx":2,"dy":2},
+            "raquete":{"x":50,"tamanho":15,"altura":4,"cor":"blue"}
         }
         window.onload = drawScreen;
         window.onresize = drawScreen;
+        let timerGame = setInterval(()=>{
+            movimentaBola();
+            drawScreen();
+        },100);
+
+
     </script>
 </head>
 <body>
