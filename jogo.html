@@ -18,7 +18,7 @@
         
         function drawMainSquare(mySvg,h,w){            
             let myMainSquare = document.getElementById('myMainSquare');
-            let sw = 10;
+            let sw = strokeMainSquare;
             let fill = 'lightgray';
             if(myMainSquare == null){     
                 myMainSquare = document.createElementNS("http://www.w3.org/2000/svg",'rect');                        
@@ -34,6 +34,46 @@
             
         }
 
+        function drawPlacar(){
+            let myPlacar = document.getElementById('myPlacar');            
+            let fill = 'red';
+            let stroke = 'blue';
+            let fs = 30;
+            let x = 10;   
+            let y = heightPlacar-10;       
+            if( myPlacar  == null){     
+                myPlacar = document.createElementNS("http://www.w3.org/2000/svg",'text');                        
+                myPlacar.setAttribute('id','myPlacar');               
+                mySvg.appendChild(myPlacar);            
+            }
+            let theStyle = style="fill:"+fill+";font: bold "+fs+"px sans-serif;";
+            myPlacar.textContent = "PLACAR: " + placar;
+            myPlacar.setAttribute('x',x);
+            myPlacar.setAttribute('y',y);
+            myPlacar.setAttribute('style',theStyle)
+
+        }
+
+        function drawGameBoard(mySvg,h,w){
+            let myGameBoard = document.getElementById('myGameBoard');
+            let sw = strokeMainSquare;
+            let fill = 'black';
+            let stroke = 'blue';
+            let x = 0;
+            let w2 = w;
+            let h2 = h-heightPlacar;
+            if(myGameBoard == null){     
+                myGameBoard = document.createElementNS("http://www.w3.org/2000/svg",'rect');                        
+                myGameBoard.setAttribute('id','myGameBoard');               
+                mySvg.appendChild(myGameBoard);            
+            }
+            let theStyle = style="fill:"+fill+";stroke:"+stroke+";stroke-width:"+sw+";padding:0";
+            myGameBoard.setAttribute('x',x);
+            myGameBoard.setAttribute('y',heightPlacar);
+            myGameBoard.setAttribute('width',w2);
+            myGameBoard.setAttribute('height',h2);           
+            myGameBoard.setAttribute('style',theStyle);            
+        }
 
         function drawScreen(){
             //Pegar o tamanho da tela
@@ -49,8 +89,13 @@
             mySvg.setAttribute('width',w);
             mySvg.setAttribute('height',h);
             drawMainSquare(mySvg,h,w);
+            drawGameBoard(mySvg,h,w);
+            drawPlacar(mySvg);
         }
 
+        let strokeMainSquare = 10;
+        let heightPlacar = 50;
+        let placar = 0;
         window.onload = drawScreen;
         window.onresize = drawScreen;
     </script>
