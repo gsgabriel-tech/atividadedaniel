@@ -47,7 +47,7 @@
                 mySvg.appendChild(myPlacar);            
             }
             let theStyle = style="fill:"+fill+";font: bold "+fs+"px sans-serif;";
-            myPlacar.textContent = "PLACAR: " + placar;
+            myPlacar.textContent = "PLACAR: " + placar + " - Vidas:" + vidas;
             myPlacar.setAttribute('x',x);
             myPlacar.setAttribute('y',y);
             myPlacar.setAttribute('style',theStyle)
@@ -194,55 +194,197 @@
         function movimentaBola(){
             processaColisaoParedes();
             processaColisaoRaquete();
+            processaColisaoTijolos();
+
+            let oldx = document.getElementById('myBola').getAttribute('cx');
+            let oldy = document.getElementById('myBola').getAttribute('cy');
+            
             let x = cenaGame.bola.x + cenaGame.bola.dx;
             let y = cenaGame.bola.y + cenaGame.bola.dy;
 
             cenaGame.bola.x = x;
             cenaGame.bola.y = y;
+            cenaGame.bola.xold = oldx;
+            cenaGame.bola.yold = oldy;
+
+
+        }
+
+        function processaColisaoTijolos(){
+        
+            for(let i=0; i< cenaGame.tijolos.length;i++){
+                let linha = cenaGame.tijolos[i].linha;
+                let coluna = cenaGame.tijolos[i].coluna;
+                let idTijolo = 'myTijolo'+linha+'_'+coluna;
+                let bateu = processaColisaoTijolo(idTijolo);
+                if(bateu){
+                    playBallKick();
+                    let tijolo = document.getElementById(idTijolo);
+                    tijolo.remove();
+                    cenaGame.tijolos.splice(i,1);
+                    placar ++;
+                    if(cenaGame.tijolos.length ==0){
+                        alert('Você Ganhou!');
+                    }
+                    break;
+                }
+            }
+        }
+
+
+        function interceptaLinha(xq,yq,wq,hq,xold,yold,xatual,yatual){
+
+            //Testar se o ponto atual está dentro/enconstando do quadrado.
+
+            if( (xatual >= xq)&&(xatual <= (xq+wq))&&(yatual >= yq) &&(yatual <= yq+hq)){
+                //Se ponto anterior estava do lado direito então o lado que bate é o direito
+                if((yold >= yq) &&(yold <= yq+hq) && (xold > (xq+wq)) ){
+                    return "direito"
+                }
+                //Se ponto anterior estava do lado esquerdo, então o lado que bate é o esquerdo
+                else if((yold >= yq) &&(yold <= yq+hq) && (xold < xq) ){
+                    return "esquerdo"
+                }
+                //Se o ponto anterior estava em cima, o lado que bate é em cima
+                else if((xatual >= xq)&&(xatual <= (xq+wq)) && (yold < yq)){
+                    return "superior"
+                }
+                //se o ponto anterior estava em baixo, o lado que bate é o inferior
+                else if((xatual >= xq)&&(xatual <= (xq+wq)) && (yold > (yq+hq))){
+                    return "inferior"
+                }
+
+            }
+
+            return "nada"
+
+        }
+
+        function processaColisaoTijolo(idTijolo){
+            let myTijolo = document.getElementById(idTijolo);
+            let myBola = document.getElementById('myBola');
+            let xBola = Number(myBola.getAttribute('cx'));
+            let yBola = Number(myBola.getAttribute('cy'));
+            let rBola = Number(myBola.getAttribute('r'));
+            let xTijolo = Number(myTijolo.getAttribute('x'));
+            let yTijolo = Number(myTijolo.getAttribute('y'));
+            let hTijolo = Number(myTijolo.getAttribute('height'));
+            let wTijolo = Number(myTijolo.getAttribute('width'));
+            let xold = cenaGame.bola.xold;
+            let yold = cenaGame.bola.yold;
+            let bateu = false;
+
+            if(xold ==-1 && yold ==-1){
+                return false;
+            }
+
+            let ladoBate = interceptaLinha(xTijolo,yTijolo,wTijolo,hTijolo,xold,yold,xBola,yBola);
+
+            if(ladoBate =='direito'){
+                cenaGame.bola.dx = + Math.abs(cenaGame.bola.dx);
+                bateu = true;
+            }
+            else if(ladoBate =='esquerdo'){
+                cenaGame.bola.dx = - Math.abs(cenaGame.bola.dx);
+                bateu = true;
+            }
+            else if(ladoBate=='inferior'){
+                cenaGame.bola.dy = - Math.abs(cenaGame.bola.dy);
+                bateu=true;
+            }
+            else if(ladoBate=='superior'){
+                cenaGame.bola.dy = + Math.abs(cenaGame.bola.dy);
+                bateu = true;
+            }
+                 
+
+            return bateu;
 
         }
 
         function processaColisaoParedes(){
             let myGameBoard = document.getElementById('myGameBoard');
+            let myBola = document.getElementById('myBola');
             let yGB = Number(myGameBoard.getAttribute('y'));
             let xGB = Number(myGameBoard.getAttribute('x'));
             let hGB = Number(myGameBoard.getAttribute('height'));
             let wGB = Number(myGameBoard.getAttribute('width'));
-            let xBola = Math.round(xGB + ((wGB/100)*cenaGame.bola.x) );            
-            let yBola = yGB + hGB - Math.round((hGB/100)*cenaGame.bola.y);
+            //let xBola = Math.round(xGB + ((wGB/100)*cenaGame.bola.x) );            
+            //let yBola = yGB + hGB - Math.round((hGB/100)*cenaGame.bola.y);
             
-            if( (xBola > (xGB+wGB)) && (yBola > yGB) ){
-                cenaGame.bola.dx = -cenaGame.bola.dx;
+            let xBola = Number(myBola.getAttribute('cx'));
+            let yBola = Number(myBola.getAttribute('cy'));
+            let rBola = Number(myBola.getAttribute('r'));
+
+            if( ( (xBola+rBola) >= (xGB+wGB)) /*&& ( (yBola-rBola) > yGB)*/ ){ //Muro direito 
+                cenaGame.bola.dx = - Math.abs(cenaGame.bola.dx); 
+                playBallKick();               
             }
-            else if( (yBola < yGB) && ( xBola < (xGB+wGB))){
-                cenaGame.bola.dy = -cenaGame.bola.dy;
+            if( ((yBola-rBola) <= yGB) /*&& ( (xBola+rBola) < (xGB+wGB))*/){ //Muro superior  
+                cenaGame.bola.dy = -Math.abs(cenaGame.bola.dy);
+                playBallKick();
             } 
-            else if( (xBola < xGB) && (yBola > yGB)){
-                cenaGame.bola.dx = -cenaGame.bola.dx;
+            if( ( (xBola-rBola) <= xGB) /*&& ((yBola-rBola) > yGB)*/){ //Muro esquerdo
+                cenaGame.bola.dx = + Math.abs(cenaGame.bola.dx);
+                playBallKick();
             }
-            else if( (yBola > (yGB+hGB)) ){
-                cenaGame.bola.dx = 0
-                cenaGame.bola.dy =0
+            
+            if( (yBola > (yGB+hGB)) ){
+                cenaGame.bola.dx = 2;
+                cenaGame.bola.dy = 2;
+                cenaGame.bola.x = 50;
+                cenaGame.bola.y = 6;
+                cenaGame.raquete.x = 50;
+                vidas --;
+                if(vidas == 0){
+                    alert('Você perdeu!');
+                }
             }            
         }
 
+        function playBallKick(){
+                if(ballKickSound == null){
+                    ballKickSound = inicializaSom("ballkick.mp3");
+                }
+                ballKickSound.play();
+        }
+
+        function inicializaSom(arquivoSom){
+                var som = document.createElement("audio");
+                som.src = arquivoSom;
+                som.setAttribute("preload", "auto");
+                som.setAttribute("controls", "none");
+                som.style.display = "none";
+                document.body.appendChild(som);    
+                
+                return som;
+        }
+
         function processaColisaoRaquete(){
-            let myGameBoard = document.getElementById('myGameBoard');
-            let yGB = Number(myGameBoard.getAttribute('y'));
-            let xGB = Number(myGameBoard.getAttribute('x'));
-            let hGB = Number(myGameBoard.getAttribute('height'));
-            let wGB = Number(myGameBoard.getAttribute('width'));
-            let xBola = Math.round(xGB + ((wGB/100)*cenaGame.bola.x) );            
-            let yBola = yGB + hGB - Math.round((hGB/100)*cenaGame.bola.y);
+            let myBola = document.getElementById('myBola');
+            let xBola = Number(myBola.getAttribute('cx'));            
+            let yBola = Number(myBola.getAttribute('cy'));
+            let rBola = Number(myBola.getAttribute('r'));
             let myRaquete = document.getElementById('myRaquete');
             let yRaq = Number(myRaquete.getAttribute('y'));
             let xRaq = Number(myRaquete.getAttribute('x'));
             let hRaq = Number(myRaquete.getAttribute('height'));
             let wRaq = Number(myRaquete.getAttribute('width'));
 
-            if( (yBola >= yRaq)& (xBola >= xRaq) & (xBola <= (xRaq+hRaq)))
+            if( ((yBola+rBola) >= yRaq)& (xBola >= xRaq) & (xBola <= (xRaq+wRaq)))
             {
+                playBallKick();
+                //Calcula distância ao meio da raquete. Se está do lado direito, dx fica negativo
+                //  se está do lado esquerdo, fica positivo
+                let dmeio = xRaq+(wRaq/2);
+                if(xBola < dmeio){
+                    cenaGame.bola.dx = Math.abs(cenaGame.bola.dx);
+                }
+                else{
+                    cenaGame.bola.dx = -Math.abs(cenaGame.bola.dx);
+                }
                 cenaGame.bola.dy = Math.abs(cenaGame.bola.dy);
+                //cenaGame.bola.y  = yRaq +1;
             }
 
         }
@@ -268,18 +410,40 @@
             drawBola(mySvg);
         }
 
+        function movimentaRaquete(deslocamento){
+            cenaGame.raquete.x += deslocamento;
+            drawScreen();
+        }
+
+        function processatecla(event){
+                if(event.code == 'ArrowRight' ){
+                    movimentaRaquete(1);
+                }
+                else if(event.code == 'ArrowLeft' ){
+                    movimentaRaquete(-1);
+                }
+
+        }
+
         let strokeMainSquare = 10;
         let heightPlacar = 50;
         let placar = 0;
+        let vidas = 3;
+        let ballKickSound = null;
         let cenaGame = {
             "tijolos":[
                 {"linha":1, "coluna":1},{"linha":1, "coluna":2},{"linha":1, "coluna":3},{"linha":1, "coluna":4},{"linha":1, "coluna":5},
                 {"linha":2, "coluna":1},{"linha":2, "coluna":2},{"linha":2, "coluna":3},{"linha":2, "coluna":4},{"linha":2, "coluna":5},                
                 {"linha":3, "coluna":1},{"linha":3, "coluna":2},{"linha":3, "coluna":3},{"linha":3, "coluna":4},{"linha":3, "coluna":5}
             ],
-            "bola":{"x":50,"y":6,"raio":2,"cor":"red","dx":2,"dy":2},
+            "bola":{"x":50,"y":6,"raio":2,"cor":"red","dx":2,"dy":2,"xold":-1,"yold":-1},
             "raquete":{"x":50,"tamanho":15,"altura":4,"cor":"blue"}
         }
+
+       
+
+
+
         window.onload = drawScreen;
         window.onresize = drawScreen;
         let timerGame = setInterval(()=>{
@@ -287,6 +451,7 @@
             drawScreen();
         },100);
 
+        document.addEventListener('keydown',processatecla);
 
     </script>
 </head>
