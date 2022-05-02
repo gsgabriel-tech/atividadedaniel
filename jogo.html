@@ -47,7 +47,7 @@
                 mySvg.appendChild(myPlacar);            
             }
             let theStyle = style="fill:"+fill+";font: bold "+fs+"px sans-serif;";
-            myPlacar.textContent = "PLACAR: " + placar + " - Vidas:" + vidas;
+            myPlacar.textContent = "PLACAR: " + placar + " - Vidas:" + vidas    ;
             myPlacar.setAttribute('x',x);
             myPlacar.setAttribute('y',y);
             myPlacar.setAttribute('style',theStyle)
@@ -115,6 +115,22 @@
             myBola.setAttribute('style',theStyle);
 
         }
+
+        function ligaSegueMouse(){
+            cenaGame.raquete.seguemouse =true;
+        }
+
+        function desligaSegueMouse(){
+            cenaGame.raquete.seguemouse =false;
+        }        
+
+        function ligaSegueTouch(){
+            cenaGame.raquete.seguetouch =true;
+        }
+
+        function desligaSegueTouch(){
+            cenaGame.raquete.seguetouch =false;
+        }          
        
         function drawRaquete(mySvg){
 
@@ -137,6 +153,9 @@
             if(myRaquete == null){
                 myRaquete = document.createElementNS("http://www.w3.org/2000/svg", 'rect');
                 myRaquete.setAttribute('id','myRaquete');
+                myRaquete.setAttribute('onmousedown','ligaSegueMouse();');
+                myRaquete.setAttribute('ontouchstart','ligaSegueTouch();');
+                myRaquete.setAttribute('onmouseup','desligaSegueMouse();');
                 mySvg.appendChild(myRaquete);
             }
             let fill = cenaGame.raquete.cor;
@@ -389,6 +408,23 @@
 
         }
 
+        function converteXRealXProp(xreal){
+            let myGameBoard = document.getElementById('myGameBoard');
+            let w = myGameBoard.getAttribute('width');
+            let x = myGameBoard.getAttribute('x');
+
+            let prop = ((xreal-x)/w)*100;
+            return prop;
+        }
+
+        function segueMouse(){
+            cenaGame.raquete.x = converteXRealXProp(mouseX);
+        }
+
+        function segueTouch(){
+            cenaGame.raquete.x = converteXRealXProp(touchX);
+        }        
+
         function drawScreen(){
             //Pegar o tamanho da tela
             let h = window.innerHeight;
@@ -406,6 +442,12 @@
             drawGameBoard(mySvg,h,w);
             drawPlacar(mySvg);
             drawTijolos(mySvg);
+            if(cenaGame.raquete.seguemouse == true){
+                segueMouse();
+            }
+            else if(cenaGame.raquete.seguetouch == true){
+                segueTouch();
+            }
             drawRaquete(mySvg);
             drawBola(mySvg);
         }
@@ -437,13 +479,20 @@
                 {"linha":3, "coluna":1},{"linha":3, "coluna":2},{"linha":3, "coluna":3},{"linha":3, "coluna":4},{"linha":3, "coluna":5}
             ],
             "bola":{"x":50,"y":6,"raio":2,"cor":"red","dx":2,"dy":2,"xold":-1,"yold":-1},
-            "raquete":{"x":50,"tamanho":15,"altura":4,"cor":"blue"}
+            "raquete":{"x":50,"tamanho":30,"altura":8,"cor":"blue","seguemouse":false, "seguetouch":false}
         }
 
-       
+       function atualizaXMouse(event){
+            mouseX = event.offsetX;
+       }
+
+       function atualizaXTouch(event){
+            touchX = event.touches[0].clientX;
+       }       
 
 
-
+        let mouseX = -1;
+        let touchX = -1;
         window.onload = drawScreen;
         window.onresize = drawScreen;
         let timerGame = setInterval(()=>{
@@ -452,6 +501,12 @@
         },100);
 
         document.addEventListener('keydown',processatecla);
+        document.addEventListener('mousemove',atualizaXMouse);
+        document.addEventListener('touchmove',atualizaXTouch);
+        document.addEventListener('mouseup',desligaSegueMouse);
+        document.addEventListener('touchend',desligaSegueTouch);
+
+        
 
     </script>
 </head>
